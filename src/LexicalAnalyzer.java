@@ -7,13 +7,13 @@ public class LexicalAnalyzer {
 	
 	private BufferedReader input;
 	private static HashMap <String, Token> keywordTable;  // la struttura dati potrebbe essere una hash map
-	private HashMap<String,Token> symbolTable;// la symbol table in questo caso si riduce ad una semplice stringTable
+	private final HashMap<String,Token> symbolTable;// la symbol table in questo caso si riduce ad una semplice stringTable
 	private int state;
 
 	public LexicalAnalyzer(){
 		// per la semplicit� di questo esercizio si potrebbe evitare di fare due tabelle
-		keywordTable = new HashMap<String,Token>();
-		symbolTable = new HashMap<String,Token>();
+		keywordTable = new HashMap<>();
+		symbolTable = new HashMap<>();
 		state = 0;
 		keywordTable.put("if", new Token("IF"));   // inserimento delle parole chiavi nella keywordTable per evitare di scrivere un diagramma di transizione per ciascuna di esse (le parole chiavi verranno "catturate" dal diagramma di transizione e gestite e di conseguenza). IF poteva anche essere associato ad una costante numerica
         keywordTable.put("else", new Token("ELSE"));
@@ -38,8 +38,9 @@ public class LexicalAnalyzer {
 	private void retrack() {
 		// fa il retract nel file di un carattere
 		try {
-			System.out.println("ciao");
+
 			input.reset();
+			//System.out.println((char) input.read());
 
 		} catch (IOException e) {
 			System.err.println("retrackt fallito");
@@ -53,7 +54,7 @@ public class LexicalAnalyzer {
 		//si resettano tutte le variabili utilizzate
 		state = 0;
 
-		String lessema = ""; //� il lessema riconosciuto
+		StringBuilder lessema = new StringBuilder(); //� il lessema riconosciuto
         char c;
 
 		
@@ -68,12 +69,14 @@ public class LexicalAnalyzer {
 			input.reset();
 			input.mark(2);
             c = (char) input.read();
-			System.out.print(c);
+
 			//operator rel
 			switch(state){
 				case 0:
-					if(c == '<'){
-
+					if(Character.isLetter(c)){
+						state = 9;
+					}
+					else if(c == '<'){
 						state = 1;
 						/*input.mark(1);
 						if(input.read() == -1){
@@ -81,41 +84,40 @@ public class LexicalAnalyzer {
 						}
 						input.reset();
 						*/
-					}else{
+
+					}else if(c == '='){
+						state = 2;
+
+					}else if(c == '>'){
 						state = 3;
+
+					}else if(Character.isDigit(c)){
+						state = 12;
 					}
 					break;
 
+
 				case 1:
+
 					if(c == '-'){
 						/*input.mark(1);
 						if(input.read() == -1){
 							return new Token("ASSIGN");
 						}
 						input.reset();*/
-						state = 6;
-					}else{
-						state = 2;
-					}
-					break;
-
-				case 2:
-					if(c == '='){
-						/*
-						input.mark(1);
-						if(input.read() == -1){
-							return new Token("LE");
-						}
-						input.reset();
-						*/
+						state = 4;
+						break;
+					}else if (c == '='){
 						return new Token("LE");
 					}else{
 						retrack();
 						return new Token("LT");
 					}
 
-				case 3:
+
+				case 2:
 					if(c == '='){
+
 						/*
 						input.mark(1);
 						if(input.read() == -1){
@@ -124,24 +126,12 @@ public class LexicalAnalyzer {
 						input.reset();*/
 						return new Token("EQ");
 					}else {
-						state = 4;
-					}
-					break;
+						return new Token("ERROR");
 
-				case 4:
-					if(c == '>'){
-						state = 5;
-						/*
-						input.mark(1);
-						if(input.read() == -1){
-							return new Token("GT");
-						}
-						input.reset();
-						*/
 					}
-					break;
 
-				case 5:
+
+				case 3:
 					if(c == '='){
 						/*
 						input.mark(1);
@@ -156,14 +146,14 @@ public class LexicalAnalyzer {
 						return new Token("GT");
 					}
 
-				case 6:
+				case 4:
 					if(c == '-'){
 						return new Token("ASSIGN");
 					}else{
 						return new Token("ERROR");
 					}
 				default:
-					state = 9;
+
 					break;
 			}
 
@@ -171,9 +161,9 @@ public class LexicalAnalyzer {
 			//id
 			switch(state) {
 				case 9:
-					if (Character.isLetter(c)) {
 						state = 10;
-						lessema += c;
+						lessema.append(c);
+						break;
 						//input.mark(1);
 						// Nel caso in cui il file � terminato ma ho letto qualcosa di valido
 						// devo lanciare il token (altrimenti perderei l'ultimo token, troncato per l'EOF)
@@ -181,16 +171,10 @@ public class LexicalAnalyzer {
 						//	return installID(lessema);
 						//}
 						//input.reset();
-						break;
-					}else {
-						state = 12;
-					}
-					break;
 
 				case 10:
-
 					if (Character.isLetterOrDigit(c)) {
-						lessema += c;
+						lessema.append(c);
 
 						/*input.mark(1);
 						if (input.read() == -1) {
@@ -198,111 +182,61 @@ public class LexicalAnalyzer {
 						}
 						input.reset();*/
 					}else {
-						state = 11;
 						retrack();
-						return installID(lessema);
+						return installID(lessema.toString());
 
 					}
 					break;
 
 				default:
-					state = 12;
+
 					break;
 			}//end switch id
 
 			//unsigned numbers
 			switch(state){
 				case 12:
-					if(Character.isDigit(c)){
 						state = 13;
-						lessema += c;
-						/*input.mark(1);
-						if(input.read() == -1) {
-							return new Token("NUMBER", lessema);
-						}
-						input.reset();*/
+						lessema.append(c);
 						break;
-					}
-					break;
                            
                 case 13:
 					if(Character.isDigit(c)){
-						lessema += c;
-						/*
-						input.mark(1);
-						if(input.read() == -1) {
-							return new Token("NUMBER", lessema);
-						}
-						input.reset();
-						*/
+						lessema.append(c);
+						break;
 					}else{
 						retrack();
-						return new Token("NUMBER", lessema);
-
+						return new Token("NUMBER", lessema.toString());
 					}
 				default:
-					state = 14;
 					break;
 			}
 
 			//parentesi tonde e graffe
 			switch(state){
-				case 14:
-					if(c == '('){
-						return new Token("LPAR");
-					}else{
-						state = 15;
-					}
-					break;
 
 				case 15:
-					if(c == ')'){
-						return new Token("RPAR");
-					}else{
-						state = 16;
-					}
-					break;
+						return new Token("LPAR");
 
 				case 16:
-					if(c == '{'){
+						return new Token("RPAR");
+
+				case 17:
 						return new Token("LBRAC");
-					} else if (c == '}') {
-						return new Token("RBRAC");
-					}else{
-						state = 17;
-					}
-					break;
 
-				case 17 :
-					if(c == ';'){
+				case 18 :
 						return new Token("SEMI");
-					} else if (c == ',') {
-						return new Token("COMMA");
+
+					default:
+						break;
 					}
-					break;
-				default:
-					state = 18;
-					break;
+
 
 			}
-			//mangia gli spazi e ritorno a capo
-			switch(state){
-				case 18:
-					if(c == ' '){
-						return new Token("SPACE");
-					} else if (c == '\n' || c == '\t') {
-						return new Token("SPACE");
-					}
-					break;
-				default:
-				break;
 
-			}
-			//System.out.println(state);
            }
 
-		}//end while
-	//end method
+
 
 private Token installID(String lessema){
 	Token token;

@@ -4,7 +4,7 @@ public class Tester {
 	public static void main(String[] args) {
 
 		LexicalAnalyzer lexicalAnalyzer = new LexicalAnalyzer();
-		String filePath = "C:\\Users\\giova\\IdeaProjects\\Esercitazione1_HC\\src\\test1.txt";
+		String filePath = "C:\\Users\\dmc\\IdeaProjects\\Esercitazione1_HC\\src\\test1.txt";
 
 		if (lexicalAnalyzer.initialize(filePath)) {
 

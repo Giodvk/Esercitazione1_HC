@@ -1,10 +1,10 @@
 
-public class Tester {
+public class MainTester1 {
 
 	public static void main(String[] args) {
 
 		LexicalAnalyzer lexicalAnalyzer = new LexicalAnalyzer();
-		String filePath = "C:\\Users\\dmc\\IdeaProjects\\Esercitazione1_HC\\src\\test1.txt";
+		String filePath = args[0];
 
 		if (lexicalAnalyzer.initialize(filePath)) {
 
@@ -14,7 +14,7 @@ public class Tester {
 					System.out.println("<" + token + ">");
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				System.out.println("EOF raggiunto");
 			}
 
 		} else

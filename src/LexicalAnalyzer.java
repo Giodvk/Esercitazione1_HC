@@ -1,4 +1,5 @@
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
@@ -64,7 +65,7 @@ public class LexicalAnalyzer {
 			 //  per indicare che non ci sono pi� token
 			input.mark(2);
 			if(input.read() == -1){
-				return null;
+				throw new EOFException();
 			}
 			input.reset();
 			input.mark(2);
@@ -78,12 +79,6 @@ public class LexicalAnalyzer {
 					}
 					else if(c == '<'){
 						state = 1;
-						/*input.mark(1);
-						if(input.read() == -1){
-							return new Token("LT");
-						}
-						input.reset();
-						*/
 
 					}else if(c == '='){
 						state = 2;
@@ -91,8 +86,27 @@ public class LexicalAnalyzer {
 					}else if(c == '>'){
 						state = 3;
 
-					}else if(Character.isDigit(c)){
+					}else if(c == '!'){
+						state = 5;
+
+					} else if(Character.isDigit(c)){
 						state = 12;
+					}else if(c == '('){
+						state = 15;
+					}else if(c == ')'){
+						state = 16;
+					}else if(c == '{'){
+						state = 17;
+					}else if(c == '}'){
+						state = 18;
+					}else if(c == ';'){
+						state = 19;
+					}else if(c == ','){
+						state = 20;
+					}else if(c == ' ' || c == '\t' || c == '\r' || c == '\n'){
+						continue;
+					}else{
+						return new Token("ERROR");
 					}
 					break;
 
@@ -100,46 +114,24 @@ public class LexicalAnalyzer {
 				case 1:
 
 					if(c == '-'){
-						/*input.mark(1);
-						if(input.read() == -1){
-							return new Token("ASSIGN");
-						}
-						input.reset();*/
 						state = 4;
 						break;
 					}else if (c == '='){
 						return new Token("LE");
-					}else{
+					}else {
 						retrack();
 						return new Token("LT");
 					}
 
 
 				case 2:
-					if(c == '='){
-
-						/*
-						input.mark(1);
-						if(input.read() == -1){
-							return new Token("EQ");
-						}
-						input.reset();*/
+					if(c == '=') {
 						return new Token("EQ");
-					}else {
-						return new Token("ERROR");
-
+					}else{
+						return new Token ("ERROR");
 					}
-
-
 				case 3:
 					if(c == '='){
-						/*
-						input.mark(1);
-						if(input.read() == -1){
-							return new Token("GE");
-						}
-						input.reset();
-						*/
 						return new Token("GE");
 					}else{
 						retrack();
@@ -153,8 +145,14 @@ public class LexicalAnalyzer {
 						return new Token("ERROR");
 					}
 				default:
-
 					break;
+
+				case 5:
+					if(c == '='){
+						return new Token("NOTEQ");
+					}else{
+						return new Token("ERROR");
+					}
 			}
 
 
@@ -164,23 +162,10 @@ public class LexicalAnalyzer {
 						state = 10;
 						lessema.append(c);
 						break;
-						//input.mark(1);
-						// Nel caso in cui il file � terminato ma ho letto qualcosa di valido
-						// devo lanciare il token (altrimenti perderei l'ultimo token, troncato per l'EOF)
-						//if (input.read() == -1) {
-						//	return installID(lessema);
-						//}
-						//input.reset();
 
 				case 10:
 					if (Character.isLetterOrDigit(c)) {
 						lessema.append(c);
-
-						/*input.mark(1);
-						if (input.read() == -1) {
-							return installID(lessema);
-						}
-						input.reset();*/
 					}else {
 						retrack();
 						return installID(lessema.toString());
@@ -210,7 +195,7 @@ public class LexicalAnalyzer {
 					}
 				default:
 					break;
-			}
+			}// end switch unsigned numbers
 
 			//parentesi tonde e graffe
 			switch(state){
@@ -224,17 +209,22 @@ public class LexicalAnalyzer {
 				case 17:
 						return new Token("LBRAC");
 
-				case 18 :
+				case 18: return new Token("RBRAC");
+
+				case 19 :
 						return new Token("SEMI");
+
+				case 20:
+					return new Token("COMMA");
 
 					default:
 						break;
-					}
+			}//end switch delimitatori
 
 
-			}
+		}
 
-           }
+	}
 
 
 

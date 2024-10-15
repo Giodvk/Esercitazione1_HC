@@ -1,0 +1,7 @@
+if (a>10) then {
+while (a>5){
+    a <-- a - 1;
+}
+}else{
+a -- 10:
+}
